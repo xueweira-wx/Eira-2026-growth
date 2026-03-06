@@ -6,12 +6,290 @@ const { createRouter, createWebHashHistory } = VueRouter
 // ========================================
 
 const Dashboard = {
+  setup() {
+    const fabOpen = ref(false)
+    const router = VueRouter.useRouter()
+
+    // Current date in Chinese format
+    const now = new Date()
+    const weekdays = ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六']
+    const currentDate = `${now.getMonth() + 1}月${now.getDate()}日 ${weekdays[now.getDay()]}`
+
+    // Greeting based on time of day
+    const hour = now.getHours()
+    const greeting = computed(() => {
+      if (hour < 6) return '夜深了，注意休息'
+      if (hour < 9) return '早安，新的一天开始了'
+      if (hour < 12) return '上午好，保持专注'
+      if (hour < 14) return '中午好，记得吃饭'
+      if (hour < 18) return '下午好，继续加油'
+      if (hour < 21) return '晚上好，辛苦一天了'
+      return '夜深了，早点休息'
+    })
+
+    // Card 1: Monthly income - expenses
+    const monthlyBalance = computed(() => {
+      const transactions = GrowthStore.get(GrowthStore.KEYS.TRANSACTIONS)
+      if (!transactions.length) return null
+      const year = now.getFullYear()
+      const month = now.getMonth()
+      let income = 0, expense = 0
+      transactions.forEach(t => {
+        const d = new Date(t.date || t.createdAt)
+        if (d.getFullYear() === year && d.getMonth() === month) {
+          if (t.type === 'income') income += Number(t.amount) || 0
+          else expense += Number(t.amount) || 0
+        }
+      })
+      return { value: income - expense, hasData: true }
+    })
+
+    // Card 2: Net assets
+    const netAssets = computed(() => {
+      const assets = GrowthStore.get(GrowthStore.KEYS.ASSETS)
+      if (!assets.length) return null
+      const total = assets.reduce((sum, a) => sum + (Number(a.amount) || 0), 0)
+      return total
+    })
+
+    // Card 3: Learning progress
+    const learningProgress = computed(() => {
+      const progress = GrowthStore.get(GrowthStore.KEYS.LEARNING_PROGRESS)
+      if (!progress.length) return null
+      const inProgress = progress.filter(p => p.status !== 'completed' && p.status !== 'done')
+      return { count: inProgress.length, total: progress.length }
+    })
+
+    // Card 4: Content published this week
+    const weeklyContent = computed(() => {
+      const content = GrowthStore.get(GrowthStore.KEYS.CONTENT)
+      if (!content.length) return null
+      const startOfWeek = new Date(now)
+      startOfWeek.setDate(now.getDate() - now.getDay())
+      startOfWeek.setHours(0, 0, 0, 0)
+      const count = content.filter(c => {
+        const d = new Date(c.date || c.createdAt)
+        return d >= startOfWeek
+      }).length
+      return count
+    })
+
+    // Card 5: Weight trend
+    const weightTrend = computed(() => {
+      const weights = GrowthStore.get(GrowthStore.KEYS.WEIGHT)
+      if (!weights.length) return null
+      const sorted = [...weights].sort((a, b) => new Date(b.date || b.createdAt) - new Date(a.date || a.createdAt))
+      const latest = Number(sorted[0].weight || sorted[0].value)
+      const previous = sorted.length > 1 ? Number(sorted[1].weight || sorted[1].value) : null
+      let direction = 'stable'
+      if (previous !== null) {
+        if (latest > previous) direction = 'up'
+        else if (latest < previous) direction = 'down'
+      }
+      return { latest, direction }
+    })
+
+    // Card 6: Side business income this month
+    const businessIncome = computed(() => {
+      const income = GrowthStore.get(GrowthStore.KEYS.BUSINESS_INCOME)
+      if (!income.length) return null
+      const year = now.getFullYear()
+      const month = now.getMonth()
+      const total = income
+        .filter(i => {
+          const d = new Date(i.date || i.createdAt)
+          return d.getFullYear() === year && d.getMonth() === month
+        })
+        .reduce((sum, i) => sum + (Number(i.amount) || 0), 0)
+      return total
+    })
+
+    // Today's reminders
+    const todayReminders = computed(() => {
+      const reminders = GrowthStore.get(GrowthStore.KEYS.REMINDERS)
+      if (!reminders.length) return []
+      const todayStr = now.toISOString().slice(0, 10)
+      return reminders.filter(r => {
+        const d = (r.date || r.createdAt || '').slice(0, 10)
+        return d === todayStr
+      })
+    })
+
+    const toggleFab = () => {
+      fabOpen.value = !fabOpen.value
+    }
+
+    const quickAction = (path) => {
+      fabOpen.value = false
+      router.push(path)
+    }
+
+    const goSettings = () => {
+      router.push('/settings')
+    }
+
+    const formatMoney = (val) => {
+      if (val === null || val === undefined) return '暂无数据'
+      const abs = Math.abs(val)
+      if (abs >= 10000) {
+        return (val >= 0 ? '' : '-') + '\u00A5' + (abs / 10000).toFixed(1) + '万'
+      }
+      return (val >= 0 ? '' : '-') + '\u00A5' + abs.toFixed(0)
+    }
+
+    const moduleColors = {
+      finance: '#667eea',
+      assets: '#6c5ce7',
+      learning: '#00b894',
+      content: '#fd79a8',
+      weight: '#fdcb6e',
+      business: '#e17055'
+    }
+
+    return {
+      fabOpen,
+      currentDate,
+      greeting,
+      monthlyBalance,
+      netAssets,
+      learningProgress,
+      weeklyContent,
+      weightTrend,
+      businessIncome,
+      todayReminders,
+      toggleFab,
+      quickAction,
+      goSettings,
+      formatMoney,
+      moduleColors
+    }
+  },
   template: `
-    <div class="page">
-      <div class="placeholder-page">
-        <div class="icon">🏠</div>
-        <h2>首页</h2>
-        <p>成长仪表盘即将上线</p>
+    <div class="page dashboard-page">
+      <!-- Gradient Banner -->
+      <div class="dashboard-banner">
+        <button class="banner-settings" @click="goSettings">
+          <span>&#9881;</span>
+        </button>
+        <h1 class="banner-title">2026 我的成长之旅</h1>
+        <p class="banner-date">{{ currentDate }}</p>
+        <p class="banner-greeting">{{ greeting }}</p>
+      </div>
+
+      <!-- Overview Cards Grid -->
+      <div class="dashboard-cards-grid">
+        <!-- Card 1: Monthly Balance -->
+        <div class="dashboard-card" style="border-left-color: #667eea;">
+          <div class="dashboard-card-icon" style="color: #667eea;">&#128176;</div>
+          <div class="dashboard-card-value" :class="{ 'text-positive': monthlyBalance && monthlyBalance.value >= 0, 'text-negative': monthlyBalance && monthlyBalance.value < 0 }">
+            {{ monthlyBalance ? formatMoney(monthlyBalance.value) : '\u00A50' }}
+          </div>
+          <div class="dashboard-card-label">本月收支</div>
+        </div>
+
+        <!-- Card 2: Net Assets -->
+        <div class="dashboard-card" style="border-left-color: #6c5ce7;">
+          <div class="dashboard-card-icon" style="color: #6c5ce7;">&#128188;</div>
+          <div class="dashboard-card-value">
+            {{ netAssets !== null ? formatMoney(netAssets) : '\u00A50' }}
+          </div>
+          <div class="dashboard-card-label">净资产</div>
+        </div>
+
+        <!-- Card 3: Learning Progress -->
+        <div class="dashboard-card" style="border-left-color: #00b894;">
+          <div class="dashboard-card-icon" style="color: #00b894;">&#128218;</div>
+          <div class="dashboard-card-value">
+            {{ learningProgress ? learningProgress.count + ' 项进行中' : '暂无数据' }}
+          </div>
+          <div class="dashboard-card-label">学习进度</div>
+          <div class="dashboard-card-progress" v-if="learningProgress">
+            <div class="progress-bar">
+              <div class="progress-fill" :style="{ width: (learningProgress.total > 0 ? ((learningProgress.total - learningProgress.count) / learningProgress.total * 100) : 0) + '%' }"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 4: Weekly Content -->
+        <div class="dashboard-card" style="border-left-color: #fd79a8;">
+          <div class="dashboard-card-icon" style="color: #fd79a8;">&#128241;</div>
+          <div class="dashboard-card-value">
+            {{ weeklyContent !== null ? weeklyContent + ' 条内容' : '暂无数据' }}
+          </div>
+          <div class="dashboard-card-label">本周发布</div>
+        </div>
+
+        <!-- Card 5: Weight Trend -->
+        <div class="dashboard-card" style="border-left-color: #fdcb6e;">
+          <div class="dashboard-card-icon" style="color: #fdcb6e;">&#9878;</div>
+          <div class="dashboard-card-value">
+            <template v-if="weightTrend">
+              {{ weightTrend.latest }} kg
+              <span v-if="weightTrend.direction === 'up'" class="trend-arrow trend-up">&#8593;</span>
+              <span v-else-if="weightTrend.direction === 'down'" class="trend-arrow trend-down">&#8595;</span>
+              <span v-else class="trend-arrow trend-stable">&#8596;</span>
+            </template>
+            <template v-else>暂无数据</template>
+          </div>
+          <div class="dashboard-card-label">体重趋势</div>
+        </div>
+
+        <!-- Card 6: Business Income -->
+        <div class="dashboard-card" style="border-left-color: #e17055;">
+          <div class="dashboard-card-icon" style="color: #e17055;">&#128178;</div>
+          <div class="dashboard-card-value">
+            {{ businessIncome !== null ? formatMoney(businessIncome) : '\u00A50' }}
+          </div>
+          <div class="dashboard-card-label">副业收入</div>
+        </div>
+      </div>
+
+      <!-- Today's Reminders -->
+      <div class="dashboard-reminders">
+        <div class="reminders-header">
+          <h3>今日提醒</h3>
+          <router-link to="/reminders" class="reminders-link">查看全部 &rsaquo;</router-link>
+        </div>
+        <div v-if="todayReminders.length === 0" class="reminders-empty">
+          今天没有提醒，享受美好的一天吧！
+        </div>
+        <div v-else class="reminders-list">
+          <div v-for="reminder in todayReminders" :key="reminder.id" class="reminder-item">
+            <span class="reminder-dot" :style="{ background: moduleColors[reminder.module] || '#667eea' }"></span>
+            <span class="reminder-content">{{ reminder.content || reminder.title }}</span>
+            <span class="reminder-time" v-if="reminder.time">{{ reminder.time }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- FAB Overlay -->
+      <div class="fab-overlay" v-if="fabOpen" @click="toggleFab"></div>
+
+      <!-- Quick Action FAB -->
+      <div class="fab-container">
+        <transition name="fab-menu">
+          <div class="fab-menu" v-if="fabOpen">
+            <div class="fab-action" @click="quickAction('/finance')">
+              <span class="fab-action-icon">&#128181;</span>
+              <span class="fab-action-label">记一笔</span>
+            </div>
+            <div class="fab-action" @click="quickAction('/beauty')">
+              <span class="fab-action-icon">&#9878;</span>
+              <span class="fab-action-label">记体重</span>
+            </div>
+            <div class="fab-action" @click="quickAction('/business')">
+              <span class="fab-action-icon">&#9998;</span>
+              <span class="fab-action-label">发内容</span>
+            </div>
+            <div class="fab-action" @click="quickAction('/reminders')">
+              <span class="fab-action-icon">&#128276;</span>
+              <span class="fab-action-label">提醒我</span>
+            </div>
+          </div>
+        </transition>
+        <button class="fab-button" :class="{ 'fab-active': fabOpen }" @click="toggleFab">
+          <span class="fab-icon">+</span>
+        </button>
       </div>
     </div>
   `

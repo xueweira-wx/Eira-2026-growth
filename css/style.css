@@ -462,6 +462,334 @@ input, textarea, select, button {
 .gap-12 { gap: 12px; }
 
 /* ========================================
+   Dashboard Page
+   ======================================== */
+.dashboard-page {
+  padding: 0;
+  padding-bottom: 80px;
+}
+
+/* --- Gradient Banner --- */
+.dashboard-banner {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 24px;
+  border-radius: 0 0 24px 24px;
+  position: relative;
+  text-align: center;
+}
+
+.banner-settings {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 1.1rem;
+  color: white;
+  transition: background 0.3s ease;
+}
+
+.banner-settings:active {
+  background: rgba(255, 255, 255, 0.35);
+}
+
+.banner-title {
+  font-size: 1.4rem;
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+
+.banner-date {
+  font-size: 0.95rem;
+  opacity: 0.9;
+  margin-bottom: 4px;
+}
+
+.banner-greeting {
+  font-size: 0.85rem;
+  opacity: 0.8;
+}
+
+/* --- Overview Cards Grid --- */
+.dashboard-cards-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  padding: 16px;
+}
+
+.dashboard-card {
+  background: var(--bg-white);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  padding: 14px;
+  border-left: 4px solid #667eea;
+  transition: all 0.3s ease;
+}
+
+.dashboard-card:active {
+  transform: scale(0.97);
+}
+
+.dashboard-card-icon {
+  font-size: 1.4rem;
+  margin-bottom: 6px;
+}
+
+.dashboard-card-value {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+  word-break: break-all;
+}
+
+.dashboard-card-value.text-positive {
+  color: #00b894;
+}
+
+.dashboard-card-value.text-negative {
+  color: #ff6b6b;
+}
+
+.dashboard-card-label {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
+
+.dashboard-card-progress {
+  margin-top: 8px;
+}
+
+.progress-bar {
+  width: 100%;
+  height: 4px;
+  background: #eee;
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: #00b894;
+  border-radius: 2px;
+  transition: width 0.5s ease;
+}
+
+.trend-arrow {
+  font-size: 0.9rem;
+  font-weight: 700;
+  margin-left: 4px;
+}
+
+.trend-up {
+  color: #ff6b6b;
+}
+
+.trend-down {
+  color: #00b894;
+}
+
+.trend-stable {
+  color: var(--text-light);
+}
+
+/* --- Today's Reminders --- */
+.dashboard-reminders {
+  padding: 0 16px 16px;
+}
+
+.reminders-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.reminders-header h3 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.reminders-link {
+  font-size: 0.8rem;
+  color: #667eea;
+}
+
+.reminders-empty {
+  background: var(--bg-white);
+  border-radius: var(--radius-md);
+  padding: 20px;
+  text-align: center;
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  box-shadow: var(--shadow-sm);
+}
+
+.reminders-list {
+  background: var(--bg-white);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+}
+
+.reminder-item {
+  display: flex;
+  align-items: center;
+  padding: 12px 14px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.reminder-item:last-child {
+  border-bottom: none;
+}
+
+.reminder-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  margin-right: 10px;
+}
+
+.reminder-content {
+  flex: 1;
+  font-size: 0.85rem;
+  color: var(--text-primary);
+}
+
+.reminder-time {
+  font-size: 0.75rem;
+  color: var(--text-light);
+  margin-left: 8px;
+  flex-shrink: 0;
+}
+
+/* --- FAB (Floating Action Button) --- */
+.fab-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.3);
+  z-index: 99;
+  animation: fadeIn 0.2s ease;
+}
+
+.fab-container {
+  position: fixed;
+  bottom: 90px;
+  right: 20px;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.fab-button {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  border: none;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  font-size: 1.8rem;
+  cursor: pointer;
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+}
+
+.fab-button:active {
+  transform: scale(0.92);
+}
+
+.fab-icon {
+  display: inline-block;
+  transition: transform 0.3s ease;
+  line-height: 1;
+}
+
+.fab-active .fab-icon {
+  transform: rotate(45deg);
+}
+
+.fab-menu {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.fab-action {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  animation: fadeInUp 0.3s ease both;
+}
+
+.fab-action:nth-child(1) { animation-delay: 0s; }
+.fab-action:nth-child(2) { animation-delay: 0.05s; }
+.fab-action:nth-child(3) { animation-delay: 0.1s; }
+.fab-action:nth-child(4) { animation-delay: 0.15s; }
+
+.fab-action-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: var(--bg-white);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  box-shadow: var(--shadow-md);
+}
+
+.fab-action-label {
+  background: var(--bg-white);
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  box-shadow: var(--shadow-sm);
+  white-space: nowrap;
+}
+
+/* FAB menu transition */
+.fab-menu-enter-active {
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.fab-menu-leave-active {
+  transition: opacity 0.15s ease, transform 0.15s ease;
+}
+
+.fab-menu-enter-from {
+  opacity: 0;
+  transform: translateY(20px);
+}
+
+.fab-menu-leave-to {
+  opacity: 0;
+  transform: translateY(10px);
+}
+
+/* ========================================
    Placeholder Page Style
    ======================================== */
 .placeholder-page {
