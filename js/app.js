@@ -311,12 +311,181 @@ const Business = BusinessComponent
 const Reminders = ReminderComponent
 
 const Settings = {
+  setup() {
+    const router = VueRouter.useRouter()
+    const lastBackup = ref(null)
+    const notificationStatus = ref('default')
+    const fileInputRef = ref(null)
+
+    const formatBackupDate = computed(() => {
+      if (!lastBackup.value) return '从未备份'
+      const d = new Date(lastBackup.value)
+      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`
+    })
+
+    const notificationLabel = computed(() => {
+      if (notificationStatus.value === 'granted') return '已开启'
+      if (notificationStatus.value === 'denied') return '已关闭 (请在浏览器设置中开启)'
+      return '未设置'
+    })
+
+    const notificationIcon = computed(() => {
+      if (notificationStatus.value === 'granted') return '\u2705'
+      if (notificationStatus.value === 'denied') return '\u274C'
+      return ''
+    })
+
+    const refreshNotificationStatus = () => {
+      if ('Notification' in window) {
+        notificationStatus.value = Notification.permission
+      } else {
+        notificationStatus.value = 'denied'
+      }
+    }
+
+    const goBack = () => {
+      router.push('/')
+    }
+
+    const exportData = () => {
+      GrowthStore.exportAll()
+      lastBackup.value = localStorage.getItem('growth_last_backup')
+    }
+
+    const triggerImport = () => {
+      if (fileInputRef.value) {
+        fileInputRef.value.click()
+      }
+    }
+
+    const handleImport = (event) => {
+      const file = event.target.files[0]
+      if (!file) return
+      if (!confirm('导入将覆盖现有数据，确定继续吗？')) {
+        event.target.value = ''
+        return
+      }
+      const reader = new FileReader()
+      reader.onload = (e) => {
+        try {
+          GrowthStore.importAll(e.target.result)
+          alert('数据导入成功！')
+          location.reload()
+        } catch (err) {
+          alert('导入失败，请检查文件格式是否正确。')
+        }
+      }
+      reader.readAsText(file)
+      event.target.value = ''
+    }
+
+    const requestNotification = async () => {
+      if ('Notification' in window) {
+        const permission = await Notification.requestPermission()
+        notificationStatus.value = permission
+      }
+    }
+
+    const clearAllData = () => {
+      if (!confirm('确定要清除所有数据吗？此操作不可恢复！')) return
+      if (!confirm('再次确认：清除后数据将无法找回，是否继续？')) return
+      Object.values(GrowthStore.KEYS).forEach(key => {
+        localStorage.removeItem(key)
+      })
+      localStorage.removeItem('growth_last_backup')
+      alert('所有数据已清除。')
+      location.reload()
+    }
+
+    onMounted(() => {
+      lastBackup.value = localStorage.getItem('growth_last_backup')
+      refreshNotificationStatus()
+    })
+
+    return {
+      lastBackup,
+      notificationStatus,
+      fileInputRef,
+      formatBackupDate,
+      notificationLabel,
+      notificationIcon,
+      goBack,
+      exportData,
+      triggerImport,
+      handleImport,
+      requestNotification,
+      clearAllData
+    }
+  },
   template: `
-    <div class="page">
-      <div class="placeholder-page">
-        <div class="icon">⚙️</div>
-        <h2>设置</h2>
-        <p>数据备份与个性化设置即将上线</p>
+    <div class="page settings-page">
+      <button class="settings-back-btn" @click="goBack">&larr; 返回首页</button>
+
+      <h1 class="settings-title">设置</h1>
+
+      <!-- Section 1: Data Backup -->
+      <div class="settings-section">
+        <div class="settings-section-header">
+          <span class="settings-section-icon">&#128190;</span>
+          <h2>数据备份</h2>
+        </div>
+        <div class="settings-section-body">
+          <div class="settings-backup-status">
+            <span class="settings-label">上次备份：</span>
+            <span class="settings-value">{{ formatBackupDate }}</span>
+          </div>
+          <p class="settings-hint">建议每周备份一次数据</p>
+          <div class="settings-actions">
+            <button class="settings-btn settings-btn-export" @click="exportData">导出数据</button>
+            <button class="settings-btn settings-btn-import" @click="triggerImport">导入数据</button>
+            <input
+              type="file"
+              ref="fileInputRef"
+              accept=".json"
+              style="display:none"
+              @change="handleImport"
+            />
+          </div>
+        </div>
+      </div>
+
+      <!-- Section 2: Notification Settings -->
+      <div class="settings-section">
+        <div class="settings-section-header">
+          <span class="settings-section-icon">&#128276;</span>
+          <h2>通知设置</h2>
+        </div>
+        <div class="settings-section-body">
+          <div class="settings-notification-row">
+            <span class="settings-label">通知权限：</span>
+            <span class="settings-value">{{ notificationLabel }} {{ notificationIcon }}</span>
+          </div>
+          <button
+            v-if="notificationStatus === 'default'"
+            class="settings-btn settings-btn-export"
+            @click="requestNotification"
+          >开启通知</button>
+        </div>
+      </div>
+
+      <!-- Section 3: About -->
+      <div class="settings-section">
+        <div class="settings-section-header">
+          <span class="settings-section-icon">&#9432;</span>
+          <h2>关于</h2>
+        </div>
+        <div class="settings-section-body">
+          <div class="settings-about-info">
+            <p class="settings-app-name">2026 我的成长之旅</p>
+            <p class="settings-version">v1.0</p>
+            <p class="settings-desc">记录成长的每一步 — 财务、学习、健康、副业，一站式管理你的 2026 年度目标。</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Danger Zone -->
+      <div class="settings-danger-zone">
+        <button class="settings-btn settings-btn-danger" @click="clearAllData">清除所有数据</button>
       </div>
     </div>
   `
