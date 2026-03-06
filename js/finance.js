@@ -51,6 +51,282 @@ const FinanceComponent = {
       return formType.value === 'expense' ? expenseCategories : incomeCategories
     })
 
+    // ========================================
+    // Asset Planning
+    // ========================================
+    const assets = ref([])
+    const assetSnapshots = ref([])
+    const showAssetModal = ref(false)
+    const editingAssetId = ref(null)
+    const assetFormName = ref('')
+    const assetFormType = ref('bank')
+    const assetFormBalance = ref('')
+
+    // Quick balance update state
+    const showBalanceModal = ref(false)
+    const balanceUpdateAssetId = ref(null)
+    const balanceUpdateValue = ref('')
+
+    // Net worth chart ref
+    const netWorthChartRef = ref(null)
+    let netWorthChartInstance = null
+
+    const assetTypeOptions = [
+      { value: 'bank', label: '\u94f6\u884c\u5b58\u6b3e', icon: '\uD83C\uDFE6' },
+      { value: 'fund', label: '\u57fa\u91d1', icon: '\uD83D\uDCCA' },
+      { value: 'stock', label: '\u80a1\u7968', icon: '\uD83D\uDCC8' },
+      { value: 'investment', label: '\u5176\u4ed6\u6295\u8d44', icon: '\uD83D\uDC8E' },
+      { value: 'debt', label: '\u8d1f\u503a', icon: '\uD83D\uDCB3' }
+    ]
+
+    const loadAssets = () => {
+      assets.value = GrowthStore.get(GrowthStore.KEYS.ASSETS)
+      assetSnapshots.value = GrowthStore.get(GrowthStore.KEYS.ASSET_SNAPSHOTS)
+    }
+
+    const totalAssets = computed(() => {
+      return assets.value
+        .filter(a => a.type !== 'debt')
+        .reduce((sum, a) => sum + (Number(a.balance) || 0), 0)
+    })
+
+    const totalDebts = computed(() => {
+      return assets.value
+        .filter(a => a.type === 'debt')
+        .reduce((sum, a) => sum + (Number(a.balance) || 0), 0)
+    })
+
+    const netWorth = computed(() => {
+      return totalAssets.value - totalDebts.value
+    })
+
+    const getAssetTypeInfo = (type) => {
+      return assetTypeOptions.find(o => o.value === type) || assetTypeOptions[0]
+    }
+
+    const getAssetLastUpdated = (assetId) => {
+      const snaps = assetSnapshots.value
+        .filter(s => s.assetId === assetId)
+        .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+      if (snaps.length > 0) return snaps[0].date
+      const asset = assets.value.find(a => a.id === assetId)
+      return asset ? asset.createdAt.slice(0, 10) : ''
+    }
+
+    const openAddAssetModal = () => {
+      editingAssetId.value = null
+      assetFormName.value = ''
+      assetFormType.value = 'bank'
+      assetFormBalance.value = ''
+      showAssetModal.value = true
+    }
+
+    const openEditAssetModal = (asset) => {
+      editingAssetId.value = asset.id
+      assetFormName.value = asset.name
+      assetFormType.value = asset.type
+      assetFormBalance.value = String(asset.balance)
+      showAssetModal.value = true
+    }
+
+    const closeAssetModal = () => {
+      showAssetModal.value = false
+    }
+
+    const saveAsset = () => {
+      const balance = parseFloat(assetFormBalance.value)
+      if (!assetFormName.value.trim()) {
+        alert('\u8bf7\u8f93\u5165\u8d26\u6237\u540d\u79f0')
+        return
+      }
+      if (isNaN(balance)) {
+        alert('\u8bf7\u8f93\u5165\u6709\u6548\u4f59\u989d')
+        return
+      }
+
+      const typeInfo = getAssetTypeInfo(assetFormType.value)
+      const data = {
+        name: assetFormName.value.trim(),
+        type: assetFormType.value,
+        typeLabel: typeInfo.label,
+        typeIcon: typeInfo.icon,
+        balance: balance
+      }
+
+      if (editingAssetId.value) {
+        GrowthStore.update(GrowthStore.KEYS.ASSETS, editingAssetId.value, data)
+        // Also add a snapshot for the balance update
+        GrowthStore.add(GrowthStore.KEYS.ASSET_SNAPSHOTS, {
+          assetId: editingAssetId.value,
+          balance: balance,
+          date: new Date().toISOString().slice(0, 10)
+        })
+      } else {
+        const saved = GrowthStore.add(GrowthStore.KEYS.ASSETS, data)
+        // Create initial snapshot
+        GrowthStore.add(GrowthStore.KEYS.ASSET_SNAPSHOTS, {
+          assetId: saved.id,
+          balance: balance,
+          date: new Date().toISOString().slice(0, 10)
+        })
+      }
+
+      loadAssets()
+      closeAssetModal()
+      nextTick(() => renderNetWorthChart())
+    }
+
+    const deleteAsset = () => {
+      if (!editingAssetId.value) return
+      if (confirm('\u786e\u5b9a\u8981\u5220\u9664\u8fd9\u4e2a\u8d26\u6237\u5417\uff1f')) {
+        // Remove snapshots for this asset
+        const snaps = assetSnapshots.value.filter(s => s.assetId === editingAssetId.value)
+        snaps.forEach(s => GrowthStore.remove(GrowthStore.KEYS.ASSET_SNAPSHOTS, s.id))
+        GrowthStore.remove(GrowthStore.KEYS.ASSETS, editingAssetId.value)
+        loadAssets()
+        closeAssetModal()
+        nextTick(() => renderNetWorthChart())
+      }
+    }
+
+    // Quick balance update
+    const openBalanceUpdate = (asset) => {
+      balanceUpdateAssetId.value = asset.id
+      balanceUpdateValue.value = String(asset.balance)
+      showBalanceModal.value = true
+    }
+
+    const closeBalanceModal = () => {
+      showBalanceModal.value = false
+    }
+
+    const saveBalanceUpdate = () => {
+      const balance = parseFloat(balanceUpdateValue.value)
+      if (isNaN(balance)) {
+        alert('\u8bf7\u8f93\u5165\u6709\u6548\u4f59\u989d')
+        return
+      }
+
+      GrowthStore.update(GrowthStore.KEYS.ASSETS, balanceUpdateAssetId.value, { balance: balance })
+      GrowthStore.add(GrowthStore.KEYS.ASSET_SNAPSHOTS, {
+        assetId: balanceUpdateAssetId.value,
+        balance: balance,
+        date: new Date().toISOString().slice(0, 10)
+      })
+
+      loadAssets()
+      closeBalanceModal()
+      nextTick(() => renderNetWorthChart())
+    }
+
+    // Net Worth Trend Chart
+    const netWorthSnapshots = computed(() => {
+      // Group snapshots by date, calculate net worth for each date
+      const dateMap = {}
+      assetSnapshots.value.forEach(s => {
+        if (!dateMap[s.date]) dateMap[s.date] = {}
+        // Keep the latest snapshot per asset per date
+        dateMap[s.date][s.assetId] = s.balance
+      })
+
+      // For each date, compute the net worth using the last known balance for each asset
+      const allDates = Object.keys(dateMap).sort()
+      if (allDates.length < 2) return []
+
+      const assetBalances = {} // running balance per asset
+      const result = []
+
+      allDates.forEach(date => {
+        // Update known balances
+        Object.entries(dateMap[date]).forEach(([assetId, bal]) => {
+          assetBalances[assetId] = bal
+        })
+
+        // Calculate net worth from all known balances
+        let totalA = 0
+        let totalD = 0
+        Object.entries(assetBalances).forEach(([assetId, bal]) => {
+          const asset = assets.value.find(a => a.id === assetId)
+          if (asset && asset.type === 'debt') {
+            totalD += Number(bal) || 0
+          } else {
+            totalA += Number(bal) || 0
+          }
+        })
+
+        result.push({ date, netWorth: totalA - totalD })
+      })
+
+      return result
+    })
+
+    const renderNetWorthChart = () => {
+      const canvas = netWorthChartRef.value
+      if (!canvas) return
+      if (netWorthChartInstance) netWorthChartInstance.destroy()
+
+      const data = netWorthSnapshots.value
+      if (data.length < 2) return
+
+      const labels = data.map(d => d.date.slice(5)) // MM-DD
+      const values = data.map(d => d.netWorth)
+
+      const ctx = canvas.getContext('2d')
+      const gradient = ctx.createLinearGradient(0, 0, 0, 220)
+      gradient.addColorStop(0, 'rgba(102, 126, 234, 0.3)')
+      gradient.addColorStop(1, 'rgba(102, 126, 234, 0.02)')
+
+      netWorthChartInstance = new Chart(canvas, {
+        type: 'line',
+        data: {
+          labels,
+          datasets: [{
+            label: '\u51c0\u8d44\u4ea7',
+            data: values,
+            borderColor: '#667eea',
+            backgroundColor: gradient,
+            fill: true,
+            tension: 0.3,
+            pointRadius: 4,
+            pointBackgroundColor: '#667eea',
+            pointBorderColor: '#fff',
+            pointBorderWidth: 2
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              callbacks: {
+                label: function(ctx) {
+                  return '\u51c0\u8d44\u4ea7: \u00A5' + ctx.raw.toLocaleString()
+                }
+              }
+            }
+          },
+          scales: {
+            y: {
+              ticks: {
+                font: { size: 11 },
+                callback: function(val) { return '\u00A5' + (val >= 10000 ? (val / 10000).toFixed(1) + '\u4e07' : val) }
+              }
+            },
+            x: { ticks: { font: { size: 10 } } }
+          }
+        }
+      })
+    }
+
+    const formatAssetMoney = (val) => {
+      const num = Number(val)
+      if (Math.abs(num) >= 10000) {
+        return '\u00A5' + (num / 10000).toFixed(2) + '\u4e07'
+      }
+      return '\u00A5' + num.toLocaleString('zh-CN', { minimumFractionDigits: 0, maximumFractionDigits: 2 })
+    }
+
     // Chart refs
     const barChartRef = ref(null)
     const pieChartRef = ref(null)
@@ -429,10 +705,15 @@ const FinanceComponent = {
       if (val === 'tracking') {
         renderCharts()
       }
+      if (val === 'assets') {
+        loadAssets()
+        nextTick(() => renderNetWorthChart())
+      }
     })
 
     onMounted(() => {
       loadTransactions()
+      loadAssets()
       nextTick(() => {
         renderCharts()
       })
@@ -468,7 +749,35 @@ const FinanceComponent = {
       deleteTransaction,
       barChartRef,
       pieChartRef,
-      lineChartRef
+      lineChartRef,
+      // Asset planning
+      assets,
+      assetSnapshots,
+      showAssetModal,
+      editingAssetId,
+      assetFormName,
+      assetFormType,
+      assetFormBalance,
+      showBalanceModal,
+      balanceUpdateAssetId,
+      balanceUpdateValue,
+      netWorthChartRef,
+      assetTypeOptions,
+      totalAssets,
+      totalDebts,
+      netWorth,
+      netWorthSnapshots,
+      getAssetTypeInfo,
+      getAssetLastUpdated,
+      openAddAssetModal,
+      openEditAssetModal,
+      closeAssetModal,
+      saveAsset,
+      deleteAsset,
+      openBalanceUpdate,
+      closeBalanceModal,
+      saveBalanceUpdate,
+      formatAssetMoney
     }
   },
   template: `
@@ -565,12 +874,110 @@ const FinanceComponent = {
         <button class="finance-add-btn" @click="openAddModal">+</button>
       </div>
 
-      <!-- Assets Tab (placeholder) -->
-      <div v-if="activeTab === 'assets'">
-        <div class="placeholder-page">
-          <div class="icon">\uD83C\uDFE6</div>
-          <h2>\u8d44\u4ea7\u89c4\u5212</h2>
-          <p>\u8d44\u4ea7\u7ba1\u7406\u529f\u80fd\u5373\u5c06\u4e0a\u7ebf</p>
+      <!-- Assets Tab -->
+      <div v-if="activeTab === 'assets'" class="asset-tab-content">
+        <!-- Net Worth Summary -->
+        <div class="net-worth-summary" :class="netWorth >= 0 ? 'nw-positive' : 'nw-negative'">
+          <div class="nw-label">\u51C0\u8D44\u4EA7</div>
+          <div class="nw-amount">{{ formatAssetMoney(netWorth) }}</div>
+          <div class="nw-details">
+            <span class="nw-detail-item nw-assets">\u603B\u8D44\u4EA7 {{ formatAssetMoney(totalAssets) }}</span>
+            <span class="nw-divider">|</span>
+            <span class="nw-detail-item nw-debts">\u603B\u8D1F\u503A {{ formatAssetMoney(totalDebts) }}</span>
+          </div>
+        </div>
+
+        <!-- Net Worth Trend Chart -->
+        <div v-if="netWorthSnapshots.length >= 2" class="chart-card" style="margin: 12px 16px;">
+          <h3 class="chart-title">\u51C0\u8D44\u4EA7\u8D8B\u52BF</h3>
+          <div class="chart-container">
+            <canvas :ref="el => netWorthChartRef = el"></canvas>
+          </div>
+        </div>
+
+        <!-- Account List -->
+        <div class="asset-list">
+          <div v-if="assets.length === 0" class="empty-state">
+            <div class="empty-icon">\uD83C\uDFE6</div>
+            <p>\u8FD8\u6CA1\u6709\u8D26\u6237\uFF0C\u70B9\u51FB\u4E0B\u65B9\u6309\u94AE\u6DFB\u52A0</p>
+          </div>
+          <div
+            v-for="account in assets"
+            :key="account.id"
+            class="asset-card"
+            @click="openBalanceUpdate(account)"
+          >
+            <div class="asset-card-top">
+              <div class="asset-card-left">
+                <span class="asset-icon">{{ account.typeIcon || getAssetTypeInfo(account.type).icon }}</span>
+                <div class="asset-card-info">
+                  <span class="asset-name">{{ account.name }}</span>
+                  <span class="asset-type-badge" :class="'asset-type-' + account.type">{{ account.typeLabel || getAssetTypeInfo(account.type).label }}</span>
+                </div>
+              </div>
+              <button class="asset-edit-btn" @click.stop="openEditAssetModal(account)">\u2022\u2022\u2022</button>
+            </div>
+            <div class="asset-card-bottom">
+              <span class="asset-balance" :class="{ 'asset-debt': account.type === 'debt' }">{{ formatAssetMoney(account.balance) }}</span>
+              <span class="asset-updated">\u66F4\u65B0\u4E8E {{ getAssetLastUpdated(account.id) }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Add Account Button -->
+        <button class="finance-add-btn" @click="openAddAssetModal">+</button>
+      </div>
+
+      <!-- Add/Edit Asset Modal -->
+      <div v-if="showAssetModal" class="modal-overlay" @click.self="closeAssetModal">
+        <div class="modal-content finance-modal">
+          <div class="modal-header">
+            <span class="modal-title">{{ editingAssetId ? '\u7F16\u8F91\u8D26\u6237' : '\u6DFB\u52A0\u8D26\u6237' }}</span>
+            <button class="modal-close" @click="closeAssetModal">&times;</button>
+          </div>
+          <div class="form-group">
+            <label class="form-label">\u8D26\u6237\u540D\u79F0</label>
+            <input type="text" class="form-input" v-model="assetFormName" placeholder="\u4F8B\u5982\uFF1A\u62DB\u5546\u94F6\u884C\u50A8\u84C4" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">\u8D26\u6237\u7C7B\u578B</label>
+            <select class="form-select" v-model="assetFormType">
+              <option v-for="opt in assetTypeOptions" :key="opt.value" :value="opt.value">{{ opt.icon }} {{ opt.label }}</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">\u5F53\u524D\u4F59\u989D</label>
+            <input type="number" class="form-input" v-model="assetFormBalance" placeholder="0.00" step="0.01" />
+          </div>
+          <button class="btn btn-primary btn-block btn-lg finance-save-btn" @click="saveAsset">
+            \u4FDD\u5B58
+          </button>
+          <button v-if="editingAssetId" class="btn btn-block asset-delete-btn" @click="deleteAsset">
+            \u5220\u9664\u8D26\u6237
+          </button>
+        </div>
+      </div>
+
+      <!-- Quick Balance Update Modal -->
+      <div v-if="showBalanceModal" class="modal-overlay" @click.self="closeBalanceModal">
+        <div class="modal-content finance-modal">
+          <div class="modal-header">
+            <span class="modal-title">\u66F4\u65B0\u4F59\u989D</span>
+            <button class="modal-close" @click="closeBalanceModal">&times;</button>
+          </div>
+          <div class="amount-input-wrapper">
+            <span class="amount-prefix">\u00A5</span>
+            <input
+              type="number"
+              class="amount-input"
+              v-model="balanceUpdateValue"
+              placeholder="0.00"
+              step="0.01"
+            />
+          </div>
+          <button class="btn btn-primary btn-block btn-lg finance-save-btn" @click="saveBalanceUpdate">
+            \u786E\u8BA4\u66F4\u65B0
+          </button>
         </div>
       </div>
 
