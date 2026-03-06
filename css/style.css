@@ -3742,3 +3742,105 @@ input, textarea, select, button {
   color: #fff;
   transform: scale(0.96);
 }
+
+/* ========================================
+   Cloud Sync Styles
+   ======================================== */
+.sync-input-row {
+  display: flex;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.sync-key-input {
+  flex: 1;
+  padding: 10px 14px;
+  border: 2px solid #e0e0e0;
+  border-radius: 10px;
+  font-size: 15px;
+  outline: none;
+  transition: border-color 0.3s;
+}
+
+.sync-key-input:focus {
+  border-color: var(--electric-blue, #4ecdc4);
+}
+
+.sync-status-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+  font-size: 15px;
+  font-weight: 600;
+  color: #00b894;
+}
+
+.sync-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #ccc;
+}
+
+.sync-dot-active {
+  background: #00b894;
+  box-shadow: 0 0 6px rgba(0, 184, 148, 0.5);
+  animation: syncPulse 2s infinite;
+}
+
+@keyframes syncPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.sync-key-display {
+  font-family: monospace;
+  background: #f0f0f0;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.settings-btn-disconnect {
+  margin-top: 12px;
+  padding: 8px 16px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  background: #fff;
+  color: #999;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.settings-btn-disconnect:active {
+  background: #f5f5f5;
+}
+
+.sync-choice-dialog {
+  margin-top: 16px;
+  padding: 16px;
+  background: #f8f9ff;
+  border-radius: 12px;
+  border: 2px solid var(--primary-gradient-start, #667eea);
+}
+
+.sync-choice-title {
+  font-weight: 600;
+  margin-bottom: 12px;
+  color: #333;
+}
+
+.sync-message {
+  margin-top: 12px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 14px;
+  background: #e8f5e9;
+  color: #2e7d32;
+}
+
+.sync-message.sync-error {
+  background: #ffeef0;
+  color: #d32f2f;
+}

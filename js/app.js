@@ -418,6 +418,16 @@ const Settings = {
     const notificationStatus = ref('default')
     const fileInputRef = ref(null)
 
+    // Cloud sync state
+    const syncEnabled = ref(false)
+    const syncKey = ref('')
+    const syncKeyInput = ref('')
+    const syncStatus = ref('') // '', 'connecting', 'connected', 'error'
+    const syncMessage = ref('')
+    const lastSync = ref(null)
+    const showCloudChoice = ref(false)
+    const pendingCloudData = ref(null)
+
     const formatBackupDate = computed(() => {
       if (!lastBackup.value) return '从未备份'
       const d = new Date(lastBackup.value)
@@ -498,9 +508,115 @@ const Settings = {
       location.reload()
     }
 
+    // Cloud sync methods
+    const connectSync = async () => {
+      const key = syncKeyInput.value.trim()
+      if (!key || key.length < 2) {
+        syncMessage.value = '同步密钥至少需要2个字符'
+        return
+      }
+      syncStatus.value = 'connecting'
+      syncMessage.value = '正在连接...'
+      try {
+        const result = await CloudSync.connect(key)
+        if (result.hasCloudData) {
+          // Cloud has data, ask user
+          showCloudChoice.value = true
+          pendingCloudData.value = result.cloudData
+          syncStatus.value = 'connected'
+          syncMessage.value = ''
+        } else {
+          // No cloud data, local pushed up
+          syncEnabled.value = true
+          syncKey.value = key
+          syncStatus.value = 'connected'
+          syncMessage.value = '同步已开启，本地数据已上传到云端'
+          lastSync.value = localStorage.getItem('growth_last_sync')
+        }
+      } catch (e) {
+        syncStatus.value = 'error'
+        syncMessage.value = '连接失败: ' + e.message
+      }
+    }
+
+    const useCloudData = async () => {
+      await CloudSync.pullFromCloud()
+      showCloudChoice.value = false
+      pendingCloudData.value = null
+      syncEnabled.value = true
+      syncKey.value = syncKeyInput.value.trim()
+      syncStatus.value = 'connected'
+      syncMessage.value = '已从云端恢复数据'
+      lastSync.value = localStorage.getItem('growth_last_sync')
+      setTimeout(() => location.reload(), 1000)
+    }
+
+    const useLocalData = async () => {
+      await CloudSync.pushToCloud()
+      showCloudChoice.value = false
+      pendingCloudData.value = null
+      syncEnabled.value = true
+      syncKey.value = syncKeyInput.value.trim()
+      syncStatus.value = 'connected'
+      syncMessage.value = '同步已开启，本地数据已覆盖云端'
+      lastSync.value = localStorage.getItem('growth_last_sync')
+    }
+
+    const disconnectSync = () => {
+      if (!confirm('断开同步后，数据将只保存在当前浏览器。确定吗？')) return
+      CloudSync.disconnect()
+      syncEnabled.value = false
+      syncKey.value = ''
+      syncKeyInput.value = ''
+      syncStatus.value = ''
+      syncMessage.value = '同步已断开'
+      lastSync.value = null
+    }
+
+    const manualPush = async () => {
+      syncMessage.value = '正在上传...'
+      try {
+        await CloudSync.pushToCloud()
+        syncMessage.value = '上传完成'
+        lastSync.value = localStorage.getItem('growth_last_sync')
+      } catch (e) {
+        syncMessage.value = '上传失败: ' + e.message
+      }
+    }
+
+    const manualPull = async () => {
+      if (!confirm('从云端拉取将覆盖本地数据，确定吗？')) return
+      syncMessage.value = '正在下载...'
+      try {
+        await CloudSync.pullFromCloud()
+        syncMessage.value = '下载完成，即将刷新页面...'
+        lastSync.value = localStorage.getItem('growth_last_sync')
+        setTimeout(() => location.reload(), 1000)
+      } catch (e) {
+        syncMessage.value = '下载失败: ' + e.message
+      }
+    }
+
+    const formatSyncDate = computed(() => {
+      if (!lastSync.value) return '从未同步'
+      const d = new Date(lastSync.value)
+      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`
+    })
+
     onMounted(() => {
       lastBackup.value = localStorage.getItem('growth_last_backup')
       refreshNotificationStatus()
+      // Init cloud sync
+      if (typeof CloudSync !== 'undefined') {
+        CloudSync.init()
+        if (CloudSync.enabled) {
+          syncEnabled.value = true
+          syncKey.value = CloudSync.syncKey || ''
+          syncKeyInput.value = syncKey.value
+          syncStatus.value = 'connected'
+          lastSync.value = localStorage.getItem('growth_last_sync')
+        }
+      }
     })
 
     return {
@@ -515,7 +631,21 @@ const Settings = {
       triggerImport,
       handleImport,
       requestNotification,
-      clearAllData
+      clearAllData,
+      syncEnabled,
+      syncKey,
+      syncKeyInput,
+      syncStatus,
+      syncMessage,
+      lastSync,
+      showCloudChoice,
+      formatSyncDate,
+      connectSync,
+      useCloudData,
+      useLocalData,
+      disconnectSync,
+      manualPush,
+      manualPull
     }
   },
   template: `
@@ -550,7 +680,66 @@ const Settings = {
         </div>
       </div>
 
-      <!-- Section 2: Notification Settings -->
+      <!-- Section 2: Cloud Sync -->
+      <div class="settings-section">
+        <div class="settings-section-header">
+          <span class="settings-section-icon">&#9729;</span>
+          <h2>云端同步</h2>
+        </div>
+        <div class="settings-section-body">
+          <template v-if="!syncEnabled">
+            <p class="settings-hint">设置一个同步密钥，在任何浏览器或设备上输入相同密钥即可同步数据。</p>
+            <div class="sync-input-row">
+              <input
+                v-model="syncKeyInput"
+                type="text"
+                class="sync-key-input"
+                placeholder="输入你的同步密钥（如：eira2026）"
+                @keyup.enter="connectSync"
+              />
+              <button
+                class="settings-btn settings-btn-export"
+                @click="connectSync"
+                :disabled="syncStatus === 'connecting'"
+              >{{ syncStatus === 'connecting' ? '连接中...' : '开启同步' }}</button>
+            </div>
+          </template>
+
+          <template v-else>
+            <div class="sync-status-row">
+              <span class="sync-dot sync-dot-active"></span>
+              <span>同步已开启</span>
+            </div>
+            <div class="settings-backup-status">
+              <span class="settings-label">同步密钥：</span>
+              <span class="settings-value sync-key-display">{{ syncKey }}</span>
+            </div>
+            <div class="settings-backup-status">
+              <span class="settings-label">上次同步：</span>
+              <span class="settings-value">{{ formatSyncDate }}</span>
+            </div>
+            <div class="settings-actions">
+              <button class="settings-btn settings-btn-export" @click="manualPush">上传到云端</button>
+              <button class="settings-btn settings-btn-import" @click="manualPull">从云端下载</button>
+            </div>
+            <button class="settings-btn settings-btn-disconnect" @click="disconnectSync">断开同步</button>
+          </template>
+
+          <!-- Cloud data choice dialog -->
+          <div v-if="showCloudChoice" class="sync-choice-dialog">
+            <p class="sync-choice-title">发现云端已有数据，请选择：</p>
+            <div class="settings-actions">
+              <button class="settings-btn settings-btn-export" @click="useCloudData">使用云端数据</button>
+              <button class="settings-btn settings-btn-import" @click="useLocalData">使用本地数据</button>
+            </div>
+            <p class="settings-hint">选择"使用云端数据"会覆盖当前浏览器的数据</p>
+          </div>
+
+          <p v-if="syncMessage" class="sync-message" :class="{ 'sync-error': syncStatus === 'error' }">{{ syncMessage }}</p>
+        </div>
+      </div>
+
+      <!-- Section 3: Notification Settings -->
       <div class="settings-section">
         <div class="settings-section-header">
           <span class="settings-section-icon">&#128276;</span>

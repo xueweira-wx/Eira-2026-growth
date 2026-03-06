@@ -28,6 +28,10 @@ const GrowthStore = {
 
   set(key, data) {
     localStorage.setItem(key, JSON.stringify(data))
+    // Trigger cloud sync if enabled
+    if (typeof CloudSync !== 'undefined' && CloudSync.enabled) {
+      CloudSync.schedulePush()
+    }
   },
 
   add(key, item) {
