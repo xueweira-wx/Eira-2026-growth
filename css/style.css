@@ -3232,3 +3232,287 @@ input, textarea, select, button {
   max-height: 85vh;
   overflow-y: auto;
 }
+
+/* ========================================
+   Reminder System Styles
+   ======================================== */
+
+/* --- Permission Banner --- */
+.reminder-permission-banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  margin-bottom: 12px;
+  background: linear-gradient(135deg, #667eea22, #764ba222);
+  border: 1px solid #667eea44;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.reminder-permission-banner:active {
+  transform: scale(0.98);
+}
+
+.reminder-permission-denied {
+  background: linear-gradient(135deg, #ff6b6b11, #ff6b6b22);
+  border-color: #ff6b6b44;
+  cursor: default;
+}
+
+.reminder-permission-granted {
+  background: linear-gradient(135deg, #00b89411, #00b89422);
+  border-color: #00b89444;
+  cursor: default;
+}
+
+.permission-icon {
+  font-size: 1.2rem;
+}
+
+.permission-text {
+  flex: 1;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+.permission-arrow {
+  font-size: 1.3rem;
+  color: var(--text-light);
+  font-weight: 600;
+}
+
+/* --- Reminder Groups --- */
+.reminder-groups {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.reminder-group-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.group-label {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.group-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 6px;
+  background: var(--text-light);
+  color: #fff;
+  border-radius: 11px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+/* --- Reminder Cards --- */
+.reminder-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.reminder-card {
+  display: flex;
+  align-items: flex-start;
+  background: var(--bg-white);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  padding: 12px 14px;
+  border-left: 4px solid #95a5a6;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.reminder-card:active {
+  transform: scale(0.98);
+}
+
+.reminder-card.reminder-completed {
+  opacity: 0.5;
+}
+
+.reminder-card.reminder-completed .reminder-card-content {
+  text-decoration: line-through;
+  color: var(--text-light);
+}
+
+.reminder-card-left {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  flex: 1;
+  min-width: 0;
+}
+
+/* --- Checkbox --- */
+.reminder-checkbox-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+  margin-top: 1px;
+  cursor: pointer;
+}
+
+.reminder-checkbox {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.reminder-checkbox-custom {
+  width: 20px;
+  height: 20px;
+  border: 2px solid #95a5a6;
+  border-radius: 50%;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.reminder-checkbox:checked + .reminder-checkbox-custom {
+  background: #667eea;
+  border-color: #667eea;
+}
+
+.reminder-checkbox:checked + .reminder-checkbox-custom::after {
+  content: '';
+  position: absolute;
+  top: 3px;
+  left: 6px;
+  width: 5px;
+  height: 9px;
+  border: solid #fff;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+/* --- Card Info --- */
+.reminder-card-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.reminder-card-content {
+  display: block;
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: var(--text-primary);
+  line-height: 1.4;
+  word-break: break-word;
+}
+
+.reminder-card-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 6px;
+  flex-wrap: wrap;
+}
+
+.reminder-card-time {
+  font-family: 'SF Mono', 'Menlo', 'Consolas', monospace;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  background: var(--bg-light);
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+
+.reminder-repeat-badge {
+  font-size: 0.72rem;
+  padding: 2px 8px;
+  background: #667eea1a;
+  color: #667eea;
+  border-radius: 10px;
+  font-weight: 600;
+}
+
+.reminder-module-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.reminder-module-label {
+  font-size: 0.78rem;
+  color: var(--text-light);
+}
+
+/* --- Modal --- */
+.reminder-modal {
+  max-height: 85vh;
+  overflow-y: auto;
+}
+
+.reminder-time-input {
+  font-family: 'SF Mono', 'Menlo', 'Consolas', monospace;
+}
+
+/* --- Pill Button Group --- */
+.reminder-pill-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.reminder-pill {
+  padding: 6px 14px;
+  border: 1.5px solid #dfe6e9;
+  border-radius: 20px;
+  background: var(--bg-white);
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-weight: 500;
+}
+
+.reminder-pill:active {
+  transform: scale(0.95);
+}
+
+.reminder-pill-active {
+  background: #667eea;
+  border-color: #667eea;
+  color: #fff;
+}
+
+.reminder-module-pill {
+  font-size: 0.82rem;
+}
+
+/* --- Delete Button --- */
+.reminder-delete-btn {
+  margin-top: 8px;
+  background: none;
+  border: 1px solid #ff6b6b;
+  color: #ff6b6b;
+  border-radius: var(--radius-md);
+  padding: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.reminder-delete-btn:active {
+  background: #ff6b6b;
+  color: #fff;
+}

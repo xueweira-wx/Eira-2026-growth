@@ -307,17 +307,8 @@ const Learning = LearningComponent
 // Business component is defined in business.js as BusinessComponent
 const Business = BusinessComponent
 
-const Reminders = {
-  template: `
-    <div class="page">
-      <div class="placeholder-page">
-        <div class="icon">⏰</div>
-        <h2>提醒系统</h2>
-        <p>日程提醒与习惯打卡即将上线</p>
-      </div>
-    </div>
-  `
-}
+// Reminder component is defined in reminder.js as ReminderComponent
+const Reminders = ReminderComponent
 
 const Settings = {
   template: `
