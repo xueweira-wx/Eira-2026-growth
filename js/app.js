@@ -304,17 +304,8 @@ const Beauty = BeautyComponent
 // Learning component is defined in learning.js as LearningComponent
 const Learning = LearningComponent
 
-const Business = {
-  template: `
-    <div class="page">
-      <div class="placeholder-page">
-        <div class="icon">📱</div>
-        <h2>副业管理</h2>
-        <p>内容创作与收入跟踪即将上线</p>
-      </div>
-    </div>
-  `
-}
+// Business component is defined in business.js as BusinessComponent
+const Business = BusinessComponent
 
 const Reminders = {
   template: `
