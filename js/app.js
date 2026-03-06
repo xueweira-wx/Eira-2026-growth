@@ -298,17 +298,8 @@ const Dashboard = {
 // Finance component is defined in finance.js as FinanceComponent
 const Finance = FinanceComponent
 
-const Beauty = {
-  template: `
-    <div class="page">
-      <div class="placeholder-page">
-        <div class="icon">✨</div>
-        <h2>变美计划</h2>
-        <p>体重管理与护肤计划即将上线</p>
-      </div>
-    </div>
-  `
-}
+// Beauty component is defined in beauty.js as BeautyComponent
+const Beauty = BeautyComponent
 
 const Learning = {
   template: `

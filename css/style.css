@@ -1452,3 +1452,575 @@ input, textarea, select, button {
   background: #ff6b6b;
   color: white;
 }
+
+/* ========================================
+   Beauty Page
+   ======================================== */
+.beauty-page {
+  padding: 0;
+  padding-bottom: 80px;
+  position: relative;
+}
+
+.beauty-content {
+  padding: 0 16px 16px;
+}
+
+/* --- Beauty Sub-tabs --- */
+.beauty-tabs {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  padding: 16px 16px 8px;
+  background: var(--bg-light);
+}
+
+.beauty-tab {
+  padding: 8px 28px;
+  border: none;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  background: var(--bg-white);
+  color: var(--text-secondary);
+  box-shadow: var(--shadow-sm);
+}
+
+.beauty-tab.active {
+  background: linear-gradient(135deg, #ffd93d 0%, #ff6b6b 100%);
+  color: white;
+  box-shadow: 0 4px 15px rgba(255, 217, 61, 0.4);
+}
+
+/* --- Weight Target Bar --- */
+.weight-target-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--bg-white);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  padding: 14px 16px;
+  margin: 12px 0;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.weight-target-bar:active {
+  transform: scale(0.98);
+}
+
+.target-label {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.target-value {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.target-edit {
+  font-size: 0.9rem;
+}
+
+/* --- Weight Stats Grid --- */
+.weight-stats-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.weight-stat-card {
+  background: var(--bg-white);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  padding: 14px 8px;
+  text-align: center;
+}
+
+.weight-stat-value {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+}
+
+.weight-stat-current {
+  color: #ffd93d;
+}
+
+.weight-stat-label {
+  font-size: 0.72rem;
+  color: var(--text-secondary);
+}
+
+/* --- Weight Progress Card --- */
+.weight-progress-card {
+  margin-bottom: 12px;
+}
+
+.weight-progress-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.weight-progress-pct {
+  color: #ff6b6b;
+  font-weight: 700;
+}
+
+.weight-gap-hint {
+  margin-top: 8px;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  text-align: center;
+}
+
+/* --- Beauty Log Button --- */
+.beauty-log-btn {
+  margin: 12px 0;
+}
+
+/* --- Record List --- */
+.beauty-record-list {
+  margin-top: 12px;
+}
+
+.section-title {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 10px;
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.record-scroll {
+  background: var(--bg-white);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.record-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 14px;
+  border-bottom: 1px solid #f5f5f5;
+}
+
+.record-item:last-child {
+  border-bottom: none;
+}
+
+.record-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.record-date {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+
+.record-weight {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.record-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* --- Form Hints --- */
+.form-hint {
+  font-size: 0.78rem;
+  color: var(--text-light);
+  margin-top: 4px;
+}
+
+.form-hint-warn {
+  color: #e17055;
+  font-weight: 600;
+}
+
+/* ========================================
+   Exercise Calendar & Stats
+   ======================================== */
+.exercise-calendar-card {
+  margin: 12px 0;
+}
+
+.calendar-weekdays {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+  margin-bottom: 4px;
+}
+
+.cal-weekday {
+  text-align: center;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--text-light);
+  padding: 4px 0;
+}
+
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+}
+
+.cal-cell {
+  aspect-ratio: 1;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  min-height: 32px;
+}
+
+.cal-day-num {
+  font-size: 0.7rem;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.cal-day-num.cal-has-exercise {
+  color: white;
+  font-weight: 700;
+}
+
+.cal-legend {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  margin-top: 10px;
+  font-size: 0.7rem;
+  color: var(--text-light);
+}
+
+.cal-legend-label {
+  font-size: 0.68rem;
+}
+
+.cal-legend-box {
+  width: 14px;
+  height: 14px;
+  border-radius: 3px;
+}
+
+/* --- Exercise Stats Grid --- */
+.exercise-stats-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 10px;
+  margin: 12px 0;
+}
+
+.exercise-stat-card {
+  background: var(--bg-white);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  padding: 14px 8px;
+  text-align: center;
+}
+
+.exercise-stat-value {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #4ecdc4;
+  margin-bottom: 4px;
+}
+
+.exercise-stat-label {
+  font-size: 0.72rem;
+  color: var(--text-secondary);
+}
+
+/* --- Exercise Record Item --- */
+.exercise-record {
+  gap: 8px;
+}
+
+.exercise-type-icon {
+  font-size: 1.4rem;
+  flex-shrink: 0;
+}
+
+.exercise-record-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.exercise-record-name {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.exercise-record-date {
+  font-size: 0.72rem;
+  color: var(--text-light);
+}
+
+.exercise-record-detail {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.exercise-record-cal {
+  font-size: 0.72rem;
+  color: var(--text-secondary);
+}
+
+/* --- Exercise Type Grid (Modal) --- */
+.exercise-type-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+
+.exercise-type-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  padding: 12px 8px;
+  border-radius: var(--radius-md);
+  border: 2px solid transparent;
+  background: var(--bg-light);
+  transition: all 0.2s ease;
+}
+
+.exercise-type-cell:active {
+  transform: scale(0.95);
+}
+
+.exercise-type-selected {
+  border-color: #4ecdc4;
+  background: rgba(78, 205, 196, 0.1);
+}
+
+.exercise-type-emoji {
+  font-size: 1.5rem;
+}
+
+.exercise-type-name {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+/* ========================================
+   Skincare & Beauty Plans
+   ======================================== */
+
+/* --- Skincare Streak Card --- */
+.skincare-streak-card {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 18px;
+  margin: 12px 0;
+  background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+}
+
+.streak-fire {
+  font-size: 1.6rem;
+}
+
+.streak-text {
+  font-size: 1rem;
+  color: #2d3436;
+}
+
+.streak-text strong {
+  font-size: 1.3rem;
+  color: #e17055;
+}
+
+/* --- Skincare Log Card --- */
+.skincare-log-card {
+  margin: 12px 0;
+}
+
+/* --- Routine Toggle --- */
+.type-morning-active {
+  background: linear-gradient(135deg, #ffd93d 0%, #f0932b 100%) !important;
+  color: white !important;
+  box-shadow: 0 2px 8px rgba(255, 217, 61, 0.3) !important;
+}
+
+.type-evening-active {
+  background: linear-gradient(135deg, #6c5ce7 0%, #a29bfe 100%) !important;
+  color: white !important;
+  box-shadow: 0 2px 8px rgba(108, 92, 231, 0.3) !important;
+}
+
+/* --- Skincare Checklist --- */
+.skincare-checklist {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.skincare-check-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: background 0.2s ease;
+  user-select: none;
+}
+
+.skincare-check-item:active {
+  background: var(--bg-light);
+}
+
+.skincare-checkbox {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 2px solid #ddd;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  flex-shrink: 0;
+}
+
+.skincare-checkbox.checked {
+  background: linear-gradient(135deg, #fd79a8, #e84393);
+  border-color: #e84393;
+  animation: checkBounce 0.3s ease;
+}
+
+@keyframes checkBounce {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.2); }
+  100% { transform: scale(1); }
+}
+
+.check-mark {
+  color: white;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.skincare-step-name {
+  font-size: 0.9rem;
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+/* --- Beauty Plans --- */
+.beauty-plans-section {
+  margin-top: 16px;
+}
+
+.beauty-plan-card {
+  margin-bottom: 10px;
+}
+
+.plan-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.plan-name {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.plan-progress-row {
+  margin-bottom: 10px;
+}
+
+.plan-progress-label {
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+  margin-bottom: 6px;
+  display: block;
+}
+
+.plan-progress-bar {
+  height: 6px;
+}
+
+.plan-bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.plan-streak {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+
+.plan-streak strong {
+  color: #e17055;
+}
+
+.plan-checkin-btn {
+  padding: 6px 18px !important;
+}
+
+/* --- Plan Frequency Row (Modal) --- */
+.plan-freq-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.plan-freq-input {
+  width: 70px !important;
+  text-align: center;
+}
+
+.plan-freq-sep {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+.plan-freq-select {
+  width: 80px !important;
+}
