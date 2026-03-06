@@ -301,17 +301,8 @@ const Finance = FinanceComponent
 // Beauty component is defined in beauty.js as BeautyComponent
 const Beauty = BeautyComponent
 
-const Learning = {
-  template: `
-    <div class="page">
-      <div class="placeholder-page">
-        <div class="icon">📚</div>
-        <h2>技能学习</h2>
-        <p>学习进度跟踪即将上线</p>
-      </div>
-    </div>
-  `
-}
+// Learning component is defined in learning.js as LearningComponent
+const Learning = LearningComponent
 
 const Business = {
   template: `
