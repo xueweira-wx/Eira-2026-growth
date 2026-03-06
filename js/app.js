@@ -295,17 +295,8 @@ const Dashboard = {
   `
 }
 
-const Finance = {
-  template: `
-    <div class="page">
-      <div class="placeholder-page">
-        <div class="icon">💰</div>
-        <h2>财务中心</h2>
-        <p>记账与资产管理即将上线</p>
-      </div>
-    </div>
-  `
-}
+// Finance component is defined in finance.js as FinanceComponent
+const Finance = FinanceComponent
 
 const Beauty = {
   template: `
