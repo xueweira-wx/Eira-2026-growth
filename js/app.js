@@ -1,4 +1,4 @@
-const { createApp, ref, computed, onMounted } = Vue
+const { createApp, ref, computed, onMounted, watch, nextTick } = Vue
 const { createRouter, createWebHashHistory } = VueRouter
 
 // ========================================
@@ -146,6 +146,101 @@ const Dashboard = {
       business: '#e17055'
     }
 
+    // Count-up animation for dashboard numbers
+    const animatedBalance = ref(0)
+    const animatedAssets = ref(0)
+    const animatedLearningCount = ref(0)
+    const animatedWeeklyContent = ref(0)
+    const animatedWeight = ref(0)
+    const animatedBusiness = ref(0)
+    const animationMounted = ref(false)
+
+    const animateValue = (targetRef, endValue, duration = 800) => {
+      if (endValue === null || endValue === undefined || isNaN(endValue)) return
+      const startValue = 0
+      const startTime = performance.now()
+      const step = (currentTime) => {
+        const elapsed = currentTime - startTime
+        const progress = Math.min(elapsed / duration, 1)
+        // ease-out cubic
+        const eased = 1 - Math.pow(1 - progress, 3)
+        targetRef.value = startValue + (endValue - startValue) * eased
+        if (progress < 1) {
+          requestAnimationFrame(step)
+        } else {
+          targetRef.value = endValue
+        }
+      }
+      requestAnimationFrame(step)
+    }
+
+    onMounted(() => {
+      animationMounted.value = true
+      nextTick(() => {
+        // Animate balance
+        if (monthlyBalance.value && monthlyBalance.value.hasData) {
+          animateValue(animatedBalance, monthlyBalance.value.value)
+        }
+        // Animate net assets
+        if (netAssets.value !== null) {
+          animateValue(animatedAssets, netAssets.value)
+        }
+        // Animate learning count
+        if (learningProgress.value) {
+          animateValue(animatedLearningCount, learningProgress.value.count)
+        }
+        // Animate weekly content
+        if (weeklyContent.value !== null) {
+          animateValue(animatedWeeklyContent, weeklyContent.value)
+        }
+        // Animate weight
+        if (weightTrend.value) {
+          animateValue(animatedWeight, weightTrend.value.latest, 1000)
+        }
+        // Animate business income
+        if (businessIncome.value !== null) {
+          animateValue(animatedBusiness, businessIncome.value)
+        }
+      })
+    })
+
+    // Formatted animated values
+    const displayBalance = computed(() => {
+      if (!monthlyBalance.value || !monthlyBalance.value.hasData) return '\u00A50'
+      if (!animationMounted.value) return '\u00A50'
+      return formatMoney(Math.round(animatedBalance.value))
+    })
+
+    const displayAssets = computed(() => {
+      if (netAssets.value === null) return '\u00A50'
+      if (!animationMounted.value) return '\u00A50'
+      return formatMoney(Math.round(animatedAssets.value))
+    })
+
+    const displayLearning = computed(() => {
+      if (!learningProgress.value) return '暂无数据'
+      if (!animationMounted.value) return '0 项进行中'
+      return Math.round(animatedLearningCount.value) + ' 项进行中'
+    })
+
+    const displayWeeklyContent = computed(() => {
+      if (weeklyContent.value === null) return '暂无数据'
+      if (!animationMounted.value) return '0 条内容'
+      return Math.round(animatedWeeklyContent.value) + ' 条内容'
+    })
+
+    const displayWeight = computed(() => {
+      if (!weightTrend.value) return null
+      if (!animationMounted.value) return '0'
+      return animatedWeight.value.toFixed(1)
+    })
+
+    const displayBusiness = computed(() => {
+      if (businessIncome.value === null) return '\u00A50'
+      if (!animationMounted.value) return '\u00A50'
+      return formatMoney(Math.round(animatedBusiness.value))
+    })
+
     return {
       fabOpen,
       currentDate,
@@ -161,7 +256,13 @@ const Dashboard = {
       quickAction,
       goSettings,
       formatMoney,
-      moduleColors
+      moduleColors,
+      displayBalance,
+      displayAssets,
+      displayLearning,
+      displayWeeklyContent,
+      displayWeight,
+      displayBusiness
     }
   },
   template: `
@@ -182,7 +283,7 @@ const Dashboard = {
         <div class="dashboard-card" style="border-left-color: #667eea;">
           <div class="dashboard-card-icon" style="color: #667eea;">&#128176;</div>
           <div class="dashboard-card-value" :class="{ 'text-positive': monthlyBalance && monthlyBalance.value >= 0, 'text-negative': monthlyBalance && monthlyBalance.value < 0 }">
-            {{ monthlyBalance ? formatMoney(monthlyBalance.value) : '\u00A50' }}
+            {{ displayBalance }}
           </div>
           <div class="dashboard-card-label">本月收支</div>
         </div>
@@ -191,7 +292,7 @@ const Dashboard = {
         <div class="dashboard-card" style="border-left-color: #6c5ce7;">
           <div class="dashboard-card-icon" style="color: #6c5ce7;">&#128188;</div>
           <div class="dashboard-card-value">
-            {{ netAssets !== null ? formatMoney(netAssets) : '\u00A50' }}
+            {{ displayAssets }}
           </div>
           <div class="dashboard-card-label">净资产</div>
         </div>
@@ -200,7 +301,7 @@ const Dashboard = {
         <div class="dashboard-card" style="border-left-color: #00b894;">
           <div class="dashboard-card-icon" style="color: #00b894;">&#128218;</div>
           <div class="dashboard-card-value">
-            {{ learningProgress ? learningProgress.count + ' 项进行中' : '暂无数据' }}
+            {{ displayLearning }}
           </div>
           <div class="dashboard-card-label">学习进度</div>
           <div class="dashboard-card-progress" v-if="learningProgress">
@@ -214,7 +315,7 @@ const Dashboard = {
         <div class="dashboard-card" style="border-left-color: #fd79a8;">
           <div class="dashboard-card-icon" style="color: #fd79a8;">&#128241;</div>
           <div class="dashboard-card-value">
-            {{ weeklyContent !== null ? weeklyContent + ' 条内容' : '暂无数据' }}
+            {{ displayWeeklyContent }}
           </div>
           <div class="dashboard-card-label">本周发布</div>
         </div>
@@ -224,7 +325,7 @@ const Dashboard = {
           <div class="dashboard-card-icon" style="color: #fdcb6e;">&#9878;</div>
           <div class="dashboard-card-value">
             <template v-if="weightTrend">
-              {{ weightTrend.latest }} kg
+              {{ displayWeight }} kg
               <span v-if="weightTrend.direction === 'up'" class="trend-arrow trend-up">&#8593;</span>
               <span v-else-if="weightTrend.direction === 'down'" class="trend-arrow trend-down">&#8595;</span>
               <span v-else class="trend-arrow trend-stable">&#8596;</span>
@@ -238,7 +339,7 @@ const Dashboard = {
         <div class="dashboard-card" style="border-left-color: #e17055;">
           <div class="dashboard-card-icon" style="color: #e17055;">&#128178;</div>
           <div class="dashboard-card-value">
-            {{ businessIncome !== null ? formatMoney(businessIncome) : '\u00A50' }}
+            {{ displayBusiness }}
           </div>
           <div class="dashboard-card-label">副业收入</div>
         </div>

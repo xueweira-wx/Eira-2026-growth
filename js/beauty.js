@@ -651,6 +651,12 @@ const BeautyComponent = {
           </div>
         </div>
 
+        <div v-if="sortedWeights.length === 0" class="empty-state">
+          <div class="empty-icon">\u2696\uFE0F</div>
+          <div class="empty-text">\u8FD8\u6CA1\u6709\u4F53\u91CD\u8BB0\u5F55</div>
+          <div class="empty-hint">\u70B9\u51FB\u4E0A\u65B9\u6309\u94AE\u5F00\u59CB\u8BB0\u5F55\u5427\uFF01</div>
+        </div>
+
         <!-- Weight Records List -->
         <div class="beauty-record-list" v-if="sortedWeightsDesc.length > 0">
           <h3 class="section-title">\u8BB0\u5F55\u5386\u53F2</h3>
@@ -738,6 +744,12 @@ const BeautyComponent = {
               </div>
             </div>
           </div>
+        </div>
+
+        <div v-if="monthExerciseLog.length === 0" class="empty-state">
+          <div class="empty-icon">\uD83C\uDFC3</div>
+          <div class="empty-text">\u672C\u6708\u8FD8\u6CA1\u6709\u8FD0\u52A8\u8BB0\u5F55</div>
+          <div class="empty-hint">\u70B9\u51FB\u4E0A\u65B9\u6309\u94AE\u5F00\u59CB\u8BB0\u5F55\u8FD0\u52A8\u5427\uFF01</div>
         </div>
       </div>
 
