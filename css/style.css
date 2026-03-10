@@ -379,6 +379,22 @@ input, textarea, select, button {
   padding: 24px 16px;
   overflow-y: auto;
   animation: slideUp 0.3s ease;
+  display: flex;
+  flex-direction: column;
+}
+
+.modal-content .modal-sticky-btn {
+  position: sticky;
+  bottom: 0;
+  z-index: 10;
+  padding: 12px 0;
+  padding-bottom: max(12px, env(safe-area-inset-bottom, 12px));
+  background: var(--bg-white);
+  margin: 0 -16px -24px;
+  padding-left: 16px;
+  padding-right: 16px;
+  box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.06);
+  flex-shrink: 0;
 }
 
 .modal-header {
@@ -1296,7 +1312,7 @@ input, textarea, select, button {
 
 /* --- Save Button --- */
 .finance-save-btn {
-  margin-top: 12px;
+  margin-top: 0;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
   box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3) !important;
 }
@@ -2693,6 +2709,110 @@ input, textarea, select, button {
   font-weight: 600;
   cursor: pointer;
   color: white;
+}
+
+/* ========================================
+   Check-in Mode Styles
+   ======================================== */
+.checkin-stats {
+  display: flex;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.checkin-stat-item {
+  flex: 1;
+  background: var(--bg-white);
+  border-radius: var(--radius-md);
+  padding: 14px 8px;
+  text-align: center;
+  box-shadow: var(--shadow-sm);
+}
+
+.checkin-stat-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.checkin-stat-label {
+  font-size: 0.75rem;
+  color: var(--text-light);
+  margin-top: 4px;
+}
+
+.checkin-action {
+  margin-top: 16px;
+}
+
+.checkin-btn {
+  border: none;
+  font-size: 1.1rem;
+  font-weight: 700;
+  padding: 16px;
+  border-radius: var(--radius-lg);
+  color: white;
+  cursor: pointer;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+}
+
+.checkin-done-badge {
+  text-align: center;
+  padding: 16px;
+  border: 2px dashed;
+  border-radius: var(--radius-lg);
+  font-size: 1.1rem;
+  font-weight: 600;
+  background: var(--bg-white);
+}
+
+.checkin-duration-options {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.checkin-duration-btn {
+  padding: 10px;
+  border: 2px solid var(--border-color);
+  border-radius: var(--radius-md);
+  background: var(--bg-white);
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.checkin-record {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.checkin-record:last-child {
+  border-bottom: none;
+}
+
+.checkin-record-date {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.checkin-record-note {
+  font-size: 0.8rem;
+  color: var(--text-light);
+  margin-top: 4px;
+}
+
+.checkin-record-duration {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  background: var(--bg-light);
+  padding: 4px 10px;
+  border-radius: var(--radius-sm);
 }
 
 /* ========================================

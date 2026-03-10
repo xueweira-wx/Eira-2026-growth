@@ -1,8 +1,9 @@
-// 视频剪辑教程 - 主文件（组装所有章节）
+// 视频剪辑 - 打卡/进度追踪（不含教程内容）
 const EDITING_TUTORIAL = {
   id: 'editing',
-  name: '视频剪辑入门',
-  icon: '🎬',
+  name: '视频剪辑',
+  icon: '\uD83C\uDFAC',
   color: '#e17055',
-  chapters: [EDITING_CH1, EDITING_CH2, EDITING_CH3, EDITING_CH4, EDITING_CH5]
+  mode: 'checkin',
+  chapters: []
 }

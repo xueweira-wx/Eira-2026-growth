@@ -490,14 +490,15 @@ const ReminderComponent = {
           </div>
 
           <!-- Save Button -->
+          <div class="modal-sticky-btn">
           <button class="btn btn-primary btn-block btn-lg finance-save-btn" @click="saveReminder">
             {{ editingId ? '\u4fdd\u5b58\u4fee\u6539' : '\u4fdd\u5b58' }}
           </button>
-
           <!-- Delete Button (edit mode only) -->
           <button v-if="editingId" class="btn btn-block reminder-delete-btn" @click="deleteReminder">
             \u5220\u9664\u63d0\u9192
           </button>
+          </div>
         </div>
       </div>
     </div>

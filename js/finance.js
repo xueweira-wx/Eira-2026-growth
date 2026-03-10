@@ -949,12 +949,14 @@ const FinanceComponent = {
             <label class="form-label">\u5F53\u524D\u4F59\u989D</label>
             <input type="number" class="form-input" v-model="assetFormBalance" placeholder="0.00" step="0.01" />
           </div>
+          <div class="modal-sticky-btn">
           <button class="btn btn-primary btn-block btn-lg finance-save-btn" @click="saveAsset">
             \u4FDD\u5B58
           </button>
           <button v-if="editingAssetId" class="btn btn-block asset-delete-btn" @click="deleteAsset">
             \u5220\u9664\u8D26\u6237
           </button>
+          </div>
         </div>
       </div>
 
@@ -975,9 +977,11 @@ const FinanceComponent = {
               step="0.01"
             />
           </div>
+          <div class="modal-sticky-btn">
           <button class="btn btn-primary btn-block btn-lg finance-save-btn" @click="saveBalanceUpdate">
             \u786E\u8BA4\u66F4\u65B0
           </button>
+          </div>
         </div>
       </div>
 
@@ -1046,9 +1050,11 @@ const FinanceComponent = {
           </div>
 
           <!-- Save Button -->
+          <div class="modal-sticky-btn">
           <button class="btn btn-primary btn-block btn-lg finance-save-btn" @click="saveTransaction">
             {{ editingId ? '\u4fdd\u5b58\u4fee\u6539' : '\u4fdd\u5b58' }}
           </button>
+          </div>
         </div>
       </div>
     </div>

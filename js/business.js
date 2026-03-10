@@ -938,9 +938,11 @@ const BusinessComponent = {
               </div>
             </div>
           </template>
+          <div class="modal-sticky-btn">
           <button class="btn btn-primary btn-block btn-lg finance-save-btn" @click="saveContent">
             {{ editingContentId ? '\u4FDD\u5B58\u4FEE\u6539' : '\u4FDD\u5B58' }}
           </button>
+          </div>
         </div>
       </div>
 
@@ -974,7 +976,9 @@ const BusinessComponent = {
             <label class="form-label">\u5907\u6CE8</label>
             <textarea class="form-textarea" v-model="planFormNotes" placeholder="\u53EF\u9009\uFF0C\u8BB0\u5F55\u8BA1\u5212\u8BE6\u60C5..." rows="2"></textarea>
           </div>
+          <div class="modal-sticky-btn">
           <button class="btn btn-primary btn-block btn-lg finance-save-btn" @click="savePlan">\u4FDD\u5B58</button>
+          </div>
         </div>
       </div>
 
@@ -1019,7 +1023,9 @@ const BusinessComponent = {
             <label class="form-label">\u5907\u6CE8</label>
             <input type="text" class="form-input" v-model="incomeFormNotes" placeholder="\u53EF\u9009..." />
           </div>
+          <div class="modal-sticky-btn">
           <button class="btn btn-primary btn-block btn-lg finance-save-btn" @click="saveIncome">\u4FDD\u5B58</button>
+          </div>
         </div>
       </div>
 
@@ -1045,7 +1051,9 @@ const BusinessComponent = {
             <label class="form-label">\u5F53\u524D\u7C89\u4E1D\u6570</label>
             <input type="number" class="form-input" v-model="followerFormCount" placeholder="\u8F93\u5165\u7C89\u4E1D\u6570..." min="0" />
           </div>
+          <div class="modal-sticky-btn">
           <button class="btn btn-primary btn-block btn-lg finance-save-btn" @click="saveFollower">\u4FDD\u5B58</button>
+          </div>
         </div>
       </div>
     </div>

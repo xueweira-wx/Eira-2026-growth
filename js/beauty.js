@@ -846,7 +846,9 @@ const BeautyComponent = {
           <p v-if="daysSinceLastRecord !== null && daysSinceLastRecord > 3" class="form-hint form-hint-warn">
             \u8DDD\u79BB\u4E0A\u6B21\u8BB0\u5F55\u5DF2 {{ daysSinceLastRecord }} \u5929
           </p>
-          <button class="btn btn-primary btn-block btn-lg" style="margin-top:12px;" @click="saveWeight">\u4FDD\u5B58</button>
+          <div class="modal-sticky-btn">
+          <button class="btn btn-primary btn-block btn-lg" @click="saveWeight">\u4FDD\u5B58</button>
+          </div>
         </div>
       </div>
 
@@ -861,7 +863,9 @@ const BeautyComponent = {
             <label class="form-label">\u76EE\u6807\u4F53\u91CD (kg)</label>
             <input type="number" class="form-input" v-model="targetFormValue" placeholder="55.0" step="0.1" min="0" />
           </div>
-          <button class="btn btn-primary btn-block btn-lg" style="margin-top:12px;" @click="saveTarget">\u4FDD\u5B58</button>
+          <div class="modal-sticky-btn">
+          <button class="btn btn-primary btn-block btn-lg" @click="saveTarget">\u4FDD\u5B58</button>
+          </div>
         </div>
       </div>
 
@@ -897,7 +901,9 @@ const BeautyComponent = {
             <label class="form-label">\u65E5\u671F</label>
             <input type="date" class="form-input" v-model="exerciseFormDate" />
           </div>
-          <button class="btn btn-secondary btn-block btn-lg" style="margin-top:12px;" @click="saveExercise">\u4FDD\u5B58</button>
+          <div class="modal-sticky-btn">
+          <button class="btn btn-secondary btn-block btn-lg" @click="saveExercise">\u4FDD\u5B58</button>
+          </div>
         </div>
       </div>
 
@@ -923,7 +929,9 @@ const BeautyComponent = {
               </select>
             </div>
           </div>
-          <button class="btn btn-primary btn-block btn-lg" style="margin-top:12px;" @click="savePlan">\u4FDD\u5B58</button>
+          <div class="modal-sticky-btn">
+          <button class="btn btn-primary btn-block btn-lg" @click="savePlan">\u4FDD\u5B58</button>
+          </div>
         </div>
       </div>
     </div>

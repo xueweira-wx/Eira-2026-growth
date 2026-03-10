@@ -19,6 +19,11 @@ const LearningComponent = {
     const sqlShowAnswer = ref(false)
     const sqlLoading = ref(false)
 
+    // Check-in state
+    const checkinNote = ref('')
+    const checkinDuration = ref(30)
+    const showCheckinModal = ref(false)
+
     // Available skill tutorials
     const skills = computed(() => {
       const list = []
@@ -32,7 +37,7 @@ const LearningComponent = {
         list.push({ id: 'tarot', name: '\u5854\u7F57\u724C\u5165\u95E8', icon: '\uD83D\uDD2E', color: '#6c5ce7', chapters: [] })
       }
       if (!ids.includes('editing')) {
-        list.push({ id: 'editing', name: '\u89C6\u9891\u526A\u8F91\u5165\u95E8', icon: '\uD83C\uDFAC', color: '#e17055', chapters: [] })
+        list.push({ id: 'editing', name: '\u89C6\u9891\u526A\u8F91', icon: '\uD83C\uDFAC', color: '#e17055', mode: 'checkin', chapters: [] })
       }
       return list
     })
@@ -45,7 +50,7 @@ const LearningComponent = {
     }
 
     const getSkillProgress = (skillId) => {
-      return progressData.value[skillId] || { completedLessons: [] }
+      return progressData.value[skillId] || { completedLessons: [], checkins: [] }
     }
 
     const isLessonCompleted = (skillId, lessonId) => {
@@ -55,7 +60,7 @@ const LearningComponent = {
 
     const markLessonCompleted = (skillId, lessonId) => {
       const data = { ...progressData.value }
-      if (!data[skillId]) data[skillId] = { completedLessons: [] }
+      if (!data[skillId]) data[skillId] = { completedLessons: [], checkins: [] }
       if (!data[skillId].completedLessons.includes(lessonId)) {
         data[skillId].completedLessons.push(lessonId)
       }
@@ -64,6 +69,7 @@ const LearningComponent = {
     }
 
     const getTotalLessons = (skill) => {
+      if (skill.mode === 'checkin') return 0
       let count = 0
       skill.chapters.forEach(ch => { count += ch.lessons.length })
       return count
@@ -75,6 +81,7 @@ const LearningComponent = {
     }
 
     const getSkillProgressPct = (skill) => {
+      if (skill.mode === 'checkin') return 0
       const total = getTotalLessons(skill)
       if (total === 0) return 0
       return Math.round((getCompletedLessons(skill) / total) * 100)
@@ -83,6 +90,82 @@ const LearningComponent = {
     const getChapterCompletedCount = (skill, chapter) => {
       const sp = getSkillProgress(skill.id)
       return chapter.lessons.filter(l => sp.completedLessons.includes(l.id)).length
+    }
+
+    // ========================================
+    // Check-in functions
+    // ========================================
+    const getCheckins = (skillId) => {
+      const sp = getSkillProgress(skillId)
+      return sp.checkins || []
+    }
+
+    const getCheckinCount = (skillId) => {
+      return getCheckins(skillId).length
+    }
+
+    const getCheckinStreak = (skillId) => {
+      const checkins = getCheckins(skillId)
+      if (checkins.length === 0) return 0
+      const dates = checkins.map(c => c.date).sort().reverse()
+      const uniqueDates = [...new Set(dates)]
+      let streak = 0
+      const today = new Date().toISOString().slice(0, 10)
+      const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10)
+      // Start from today or yesterday
+      if (uniqueDates[0] !== today && uniqueDates[0] !== yesterday) return 0
+      let checkDate = uniqueDates[0] === today ? new Date() : new Date(Date.now() - 86400000)
+      for (const d of uniqueDates) {
+        const expected = checkDate.toISOString().slice(0, 10)
+        if (d === expected) {
+          streak++
+          checkDate = new Date(checkDate.getTime() - 86400000)
+        } else {
+          break
+        }
+      }
+      return streak
+    }
+
+    const getTotalMinutes = (skillId) => {
+      const checkins = getCheckins(skillId)
+      return checkins.reduce((sum, c) => sum + (c.duration || 0), 0)
+    }
+
+    const isTodayCheckedIn = (skillId) => {
+      const today = new Date().toISOString().slice(0, 10)
+      return getCheckins(skillId).some(c => c.date === today)
+    }
+
+    const addCheckin = (skillId) => {
+      const data = { ...progressData.value }
+      if (!data[skillId]) data[skillId] = { completedLessons: [], checkins: [] }
+      if (!data[skillId].checkins) data[skillId].checkins = []
+      data[skillId].checkins.push({
+        date: new Date().toISOString().slice(0, 10),
+        time: new Date().toISOString(),
+        duration: parseInt(checkinDuration.value) || 30,
+        note: checkinNote.value.trim()
+      })
+      GrowthStore.set(GrowthStore.KEYS.LEARNING_PROGRESS, data)
+      progressData.value = data
+      checkinNote.value = ''
+      checkinDuration.value = 30
+      showCheckinModal.value = false
+    }
+
+    const deleteCheckin = (skillId, index) => {
+      const data = { ...progressData.value }
+      if (data[skillId] && data[skillId].checkins) {
+        data[skillId].checkins.splice(index, 1)
+        GrowthStore.set(GrowthStore.KEYS.LEARNING_PROGRESS, data)
+        progressData.value = data
+      }
+    }
+
+    const getRecentCheckins = (skillId, count) => {
+      const checkins = getCheckins(skillId)
+      return checkins.slice().reverse().slice(0, count || 10)
     }
 
     // Current skill & lesson
@@ -281,7 +364,18 @@ const LearningComponent = {
       sqlShowAnswer,
       sqlLoading,
       runSQL,
-      resetSQL
+      resetSQL,
+      // Check-in
+      checkinNote,
+      checkinDuration,
+      showCheckinModal,
+      getCheckinCount,
+      getCheckinStreak,
+      getTotalMinutes,
+      isTodayCheckedIn,
+      addCheckin,
+      deleteCheckin,
+      getRecentCheckins
     }
   },
   template: `
@@ -305,10 +399,18 @@ const LearningComponent = {
             <div class="skill-card-icon">{{ skill.icon }}</div>
             <div class="skill-card-body">
               <div class="skill-card-name">{{ skill.name }}</div>
-              <div class="skill-card-progress-bar">
-                <div class="skill-card-progress-fill" :style="{ width: getSkillProgressPct(skill) + '%', background: skill.color }"></div>
-              </div>
-              <div class="skill-card-status">{{ getCompletedLessons(skill) }}/{{ getTotalLessons(skill) }} \u8BFE\u65F6\u5B8C\u6210</div>
+              <template v-if="skill.mode === 'checkin'">
+                <div class="skill-card-progress-bar">
+                  <div class="skill-card-progress-fill" :style="{ width: Math.min(getCheckinCount(skill.id), 30) / 30 * 100 + '%', background: skill.color }"></div>
+                </div>
+                <div class="skill-card-status">\u5DF2\u6253\u5361 {{ getCheckinCount(skill.id) }} \u6B21</div>
+              </template>
+              <template v-else>
+                <div class="skill-card-progress-bar">
+                  <div class="skill-card-progress-fill" :style="{ width: getSkillProgressPct(skill) + '%', background: skill.color }"></div>
+                </div>
+                <div class="skill-card-status">{{ getCompletedLessons(skill) }}/{{ getTotalLessons(skill) }} \u8BFE\u65F6\u5B8C\u6210</div>
+              </template>
             </div>
             <div class="skill-card-arrow">\u203A</div>
           </div>
@@ -319,47 +421,138 @@ const LearningComponent = {
       <div v-if="viewState === 'detail' && currentSkill">
         <button class="learning-back-btn" @click="goBackToList">\u2190 \u8FD4\u56DE</button>
 
-        <div class="skill-detail-header" :style="{ background: 'linear-gradient(135deg, ' + currentSkill.color + ', ' + currentSkill.color + '99)' }">
-          <div class="skill-detail-icon">{{ currentSkill.icon }}</div>
-          <div class="skill-detail-name">{{ currentSkill.name }}</div>
-          <div class="skill-detail-progress">
-            \u5DF2\u5B8C\u6210 {{ getCompletedLessons(currentSkill) }}/{{ getTotalLessons(currentSkill) }} \u8BFE\u65F6
-          </div>
-        </div>
-
-        <div v-if="currentSkill.chapters.length === 0" class="learning-empty">
-          <div class="learning-empty-icon">\uD83D\uDCDA</div>
-          <p>\u8BFE\u7A0B\u5185\u5BB9\u5373\u5C06\u4E0A\u7EBF\uFF0C\u656C\u8BF7\u671F\u5F85\uFF01</p>
-        </div>
-
-        <div class="chapter-list">
-          <div v-for="chapter in currentSkill.chapters" :key="chapter.id" class="chapter-item">
-            <div class="chapter-header" @click="toggleChapter(chapter.id)">
-              <div class="chapter-header-left">
-                <span class="chapter-expand-icon" :class="{ expanded: isChapterExpanded(chapter.id) }">\u203A</span>
-                <span class="chapter-title">{{ chapter.title }}</span>
-              </div>
-              <span class="chapter-completion">{{ getChapterCompletedCount(currentSkill, chapter) }}/{{ chapter.lessons.length }} \u5DF2\u5B8C\u6210</span>
+        <!-- ===== Check-in Mode (e.g. Editing) ===== -->
+        <template v-if="currentSkill.mode === 'checkin'">
+          <div class="skill-detail-header" :style="{ background: 'linear-gradient(135deg, ' + currentSkill.color + ', ' + currentSkill.color + '99)' }">
+            <div class="skill-detail-icon">{{ currentSkill.icon }}</div>
+            <div class="skill-detail-name">{{ currentSkill.name }}</div>
+            <div class="skill-detail-progress">
+              \u5DF2\u6253\u5361 {{ getCheckinCount(currentSkill.id) }} \u6B21
             </div>
-            <div class="chapter-lessons" v-show="isChapterExpanded(chapter.id)">
-              <div
-                v-for="lesson in chapter.lessons"
-                :key="lesson.id"
-                class="lesson-item"
-                @click="openLesson(lesson.id)"
-              >
-                <span
-                  class="lesson-checkbox"
-                  :class="{ completed: isLessonCompleted(currentSkill.id, lesson.id) }"
-                  :style="isLessonCompleted(currentSkill.id, lesson.id) ? { background: currentSkill.color, borderColor: currentSkill.color } : {}"
+          </div>
+
+          <!-- Stats Row -->
+          <div class="checkin-stats">
+            <div class="checkin-stat-item">
+              <div class="checkin-stat-value" :style="{ color: currentSkill.color }">{{ getCheckinStreak(currentSkill.id) }}</div>
+              <div class="checkin-stat-label">\u8FDE\u7EED\u5929\u6570</div>
+            </div>
+            <div class="checkin-stat-item">
+              <div class="checkin-stat-value" :style="{ color: currentSkill.color }">{{ getCheckinCount(currentSkill.id) }}</div>
+              <div class="checkin-stat-label">\u603B\u6253\u5361</div>
+            </div>
+            <div class="checkin-stat-item">
+              <div class="checkin-stat-value" :style="{ color: currentSkill.color }">{{ getTotalMinutes(currentSkill.id) }}</div>
+              <div class="checkin-stat-label">\u603B\u65F6\u957F(\u5206)</div>
+            </div>
+          </div>
+
+          <!-- Check-in Button -->
+          <div class="checkin-action">
+            <button
+              v-if="!isTodayCheckedIn(currentSkill.id)"
+              class="btn btn-primary btn-block btn-lg checkin-btn"
+              :style="{ background: 'linear-gradient(135deg, ' + currentSkill.color + ', ' + currentSkill.color + 'cc)' }"
+              @click="showCheckinModal = true"
+            >
+              \u2714 \u4ECA\u65E5\u6253\u5361
+            </button>
+            <div v-else class="checkin-done-badge" :style="{ borderColor: currentSkill.color, color: currentSkill.color }">
+              \u2705 \u4ECA\u65E5\u5DF2\u6253\u5361
+            </div>
+          </div>
+
+          <!-- Recent Records -->
+          <div class="card" style="margin-top:16px;">
+            <h3 class="section-title">\u6700\u8FD1\u8BB0\u5F55</h3>
+            <div v-if="getRecentCheckins(currentSkill.id, 15).length === 0" class="learning-empty" style="padding:20px 0;">
+              <p>\u8FD8\u6CA1\u6709\u6253\u5361\u8BB0\u5F55\uFF0C\u5F00\u59CB\u4F60\u7684\u7B2C\u4E00\u6B21\u5427\uFF01</p>
+            </div>
+            <div v-for="(record, idx) in getRecentCheckins(currentSkill.id, 15)" :key="idx" class="checkin-record">
+              <div class="checkin-record-left">
+                <div class="checkin-record-date">{{ record.date }}</div>
+                <div class="checkin-record-note" v-if="record.note">{{ record.note }}</div>
+              </div>
+              <div class="checkin-record-right">
+                <span class="checkin-record-duration">{{ record.duration }}\u5206\u949F</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Check-in Modal -->
+          <div v-if="showCheckinModal" class="modal-overlay" @click.self="showCheckinModal = false">
+            <div class="modal-content">
+              <div class="modal-header">
+                <span class="modal-title">\u8BB0\u5F55\u6253\u5361</span>
+                <button class="modal-close" @click="showCheckinModal = false">&times;</button>
+              </div>
+              <div class="form-group">
+                <label class="form-label">\u5B66\u4E60\u65F6\u957F\uFF08\u5206\u949F\uFF09</label>
+                <div class="checkin-duration-options">
+                  <button v-for="d in [15, 30, 45, 60, 90, 120]" :key="d"
+                    class="checkin-duration-btn"
+                    :class="{ active: checkinDuration == d }"
+                    :style="checkinDuration == d ? { background: currentSkill.color, borderColor: currentSkill.color, color: '#fff' } : {}"
+                    @click="checkinDuration = d">{{ d }}</button>
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="form-label">\u5B66\u4E60\u7B14\u8BB0\uFF08\u53EF\u9009\uFF09</label>
+                <textarea class="form-textarea" v-model="checkinNote" placeholder="\u4ECA\u5929\u5B66\u4E86\u4EC0\u4E48\uFF0C\u6709\u4EC0\u4E48\u6536\u83B7..." rows="3"></textarea>
+              </div>
+              <div class="modal-sticky-btn">
+              <button class="btn btn-primary btn-block btn-lg" :style="{ background: currentSkill.color }" @click="addCheckin(currentSkill.id)">
+                \u786E\u8BA4\u6253\u5361
+              </button>
+              </div>
+            </div>
+          </div>
+        </template>
+
+        <!-- ===== Tutorial Mode (SQL, Tarot, etc.) ===== -->
+        <template v-else>
+          <div class="skill-detail-header" :style="{ background: 'linear-gradient(135deg, ' + currentSkill.color + ', ' + currentSkill.color + '99)' }">
+            <div class="skill-detail-icon">{{ currentSkill.icon }}</div>
+            <div class="skill-detail-name">{{ currentSkill.name }}</div>
+            <div class="skill-detail-progress">
+              \u5DF2\u5B8C\u6210 {{ getCompletedLessons(currentSkill) }}/{{ getTotalLessons(currentSkill) }} \u8BFE\u65F6
+            </div>
+          </div>
+
+          <div v-if="currentSkill.chapters.length === 0" class="learning-empty">
+            <div class="learning-empty-icon">\uD83D\uDCDA</div>
+            <p>\u8BFE\u7A0B\u5185\u5BB9\u5373\u5C06\u4E0A\u7EBF\uFF0C\u656C\u8BF7\u671F\u5F85\uFF01</p>
+          </div>
+
+          <div class="chapter-list">
+            <div v-for="chapter in currentSkill.chapters" :key="chapter.id" class="chapter-item">
+              <div class="chapter-header" @click="toggleChapter(chapter.id)">
+                <div class="chapter-header-left">
+                  <span class="chapter-expand-icon" :class="{ expanded: isChapterExpanded(chapter.id) }">\u203A</span>
+                  <span class="chapter-title">{{ chapter.title }}</span>
+                </div>
+                <span class="chapter-completion">{{ getChapterCompletedCount(currentSkill, chapter) }}/{{ chapter.lessons.length }} \u5DF2\u5B8C\u6210</span>
+              </div>
+              <div class="chapter-lessons" v-show="isChapterExpanded(chapter.id)">
+                <div
+                  v-for="lesson in chapter.lessons"
+                  :key="lesson.id"
+                  class="lesson-item"
+                  @click="openLesson(lesson.id)"
                 >
-                  <span v-if="isLessonCompleted(currentSkill.id, lesson.id)" class="lesson-check-mark">\u2713</span>
-                </span>
-                <span class="lesson-title">{{ lesson.title }}</span>
+                  <span
+                    class="lesson-checkbox"
+                    :class="{ completed: isLessonCompleted(currentSkill.id, lesson.id) }"
+                    :style="isLessonCompleted(currentSkill.id, lesson.id) ? { background: currentSkill.color, borderColor: currentSkill.color } : {}"
+                  >
+                    <span v-if="isLessonCompleted(currentSkill.id, lesson.id)" class="lesson-check-mark">\u2713</span>
+                  </span>
+                  <span class="lesson-title">{{ lesson.title }}</span>
+                </div>
               </div>
             </div>
           </div>
-        </div>
+        </template>
       </div>
 
       <!-- =================== Lesson Content View =================== -->
